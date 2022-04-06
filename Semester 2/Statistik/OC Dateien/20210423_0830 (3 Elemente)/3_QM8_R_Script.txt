@@ -1,0 +1,90 @@
+##########################################################
+########## QM8 ###########################################
+
+# arr_delay filtern nach 'JFK' und 'non_JFK'
+#flights_clean <- drop_na(flights, arr_delay) #ohne NA
+
+# nur jfk
+jfk <- flights_clean %>% filter(origin == "JFK") %>% select(arr_delay)
+str(jfk) #109.079
+
+# nicht jfk
+non_jfk <- flights_clean %>% filter(origin != "JFK") %>% select(arr_delay)
+str(non_jfk) #218.267
+# 109.079 + 218.267 = 327.346
+
+# Anzahl prüfen mit Population (ohne NA)
+str(flights_clean) #327,346 x 19 --> stimmt
+
+favstats(jfk$arr_delay)
+favstats(non_jfk$arr_delay)
+
+histogram(jfk$arr_delay)
+histogram(non_jfk$arr_delay)
+
+boxplot(jfk$arr_delay)
+boxplot(non_jfk$arr_delay)
+
+#####
+### H1: Die Flüge am JFK haben weniger Verspätung (Ankunft)
+### H0: Die Flüge am JFK haben nicht weniger Verspätung (Ankunft)
+
+
+# ein JFK sample ziehen
+jfk_sample<- sample(jfk$arr_delay, size = 10000)
+x_<-mean(jfk_sample) #an dieser Stelle laesst sich nur der 
+# mean des samples berechnen
+x_
+
+non_jfk_sample<- sample(non_jfk$arr_delay, size = 10000)
+mu<-mean(non_jfk_sample) #an dieser Stelle laesstt sich nur der 
+# mean des samples berechnen
+mu
+
+
+
+
+
+set.seed(2021)
+
+# resamplen mit der H_0: non-jfk
+non_jfk_resample_loop <- do (10000)*mean(resample(non_jfk_sample)) #for-loop
+mean(non_jfk_resample_loop$mean) #mean der means (grand mean)
+sd(non_jfk_resample_loop$mean) #Standardfehler
+
+hist(non_jfk_resample_loop$mean, breaks=100) #Histogramm
+plot(density(non_jfk_resample_loop$mean,bw=0.01)) #Glaettung Dichteplot
+
+m_<-mean(non_jfk_resample_loop$mean);m_ # MW der Mittelwerte der samples
+abline(v = mean(non_jfk_resample_loop$mean), col = 2) #mean StichprobenMW
+
+
+mu0 <- mean(flights_clean$arr_delay);mu0 #komplett 6.895377
+abline(v = mean(flights_clean$arr_delay), col = 5)
+
+
+mu1<-mean(jfk$arr_delay);mu1 # gesamte JFK 5.551481
+abline(v = mean(jfk$arr_delay), col = 4) #mean alle JFK
+
+mu2<-mean(non_jfk$arr_delay);mu2 # gesamte non_JFK 7.566989
+abline(v = mean(non_jfk$arr_delay), col = 4) #mean alle non_JFK
+
+
+## 5% quantil (von links)
+
+#H1: Die Flüge am JFK haben weniger Verspätung (Ankunft)
+#H0: Die Flüge am JFK haben nicht weniger Verspätung (Ankunft)
+
+q<-quantile(non_jfk_resample_loop$mean, prob=c(0.05));q
+
+abline(v = q, col = 2, lty = 2)
+
+abline(v = x_, col = 6, lty = 2)
+
+# Entscheidung
+x_ < q #Test: ist der mean jfk kleiner 5% der non_jfk?
+paste("Der Stichprobenmittelwert von JFK beträgt",x_)
+paste("Die 5% Grenze bei non_jfk liegt bei",q)
+paste("Die Nullhypothese (nicht weniger Verspätung) wird abgelehnt")
+
+################################################################

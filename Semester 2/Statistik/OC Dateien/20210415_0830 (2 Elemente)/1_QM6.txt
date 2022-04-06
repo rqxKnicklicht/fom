@@ -1,0 +1,41 @@
+library(mosaic) #shortcut für RUN: strg+ENTER
+library(tidyverse)
+
+# installieren und importieren von nycflights13
+install.packages("nycflights13") #installieren
+library(nycflights13) #importieren
+
+# zunächst bereinigen von NA und selektieren nur arr_delay
+flights_clean <- drop_na(flights, arr_delay) #ohne NA
+
+
+
+### Schätzgenauigkeit ########+++++++++++++##
+## Standardfehler SE: Streuung (sd) der MW der verschiedenen samples 
+# Vergleich zwischen theoretischen und empirischen SE und CI
+
+
+# erzeuge x samples der Größe size und zeige favstats
+fl_sample_loop <- do(10) * 
+  favstats(sample(flights_clean$arr_delay, size = 100))
+
+hist(fl_sample_loop$mean, breaks=10) #Histogramm
+plot(density(fl_sample_loop$mean,bw=1)) #Glättung Dichteplot
+
+mu<-mean(flights_clean$arr_delay);mu # Mittelwert der population
+abline(v = mean(flights_clean$arr_delay), col = 4) #mean population
+
+m_<-mean(fl_sample_loop$mean);m_ # MW der Mittelwerte der samples
+abline(v = mean(fl_sample_loop$mean), col = 2) #mean StichprobenMW
+
+## 2.5% und 97.5% quantile (mittleren 95%)
+q<-quantile(fl_sample_loop$mean, prob=c(0.025,0.975));q
+abline(v = q, col = 2, lty = 2)
+
+sd(fl_sample_loop$mean) #Standardfehler, empirisch
+
+# Berechnung des theoretischen SE = sd/Wurzel n
+se_t<-sd(sample(flights_clean$arr_delay, size = 100))/sqrt(100);se_t
+
+
+
